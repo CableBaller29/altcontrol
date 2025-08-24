@@ -89,8 +89,10 @@ local function teleportPlayer(player, position)
     local char = player.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         local hrp = char.HumanoidRootPart
+        hrp.Anchored = false
         hrp.CFrame = CFrame.new(position)
-        hrp.Anchored = true
+        task.wait(0.5)
+        hrp.Anchored = false
     end
 end
 
