@@ -115,9 +115,20 @@ local function startDropping(totalAmount)
     dropTask = spawn(function()
         local remaining = totalAmount
         while dropLoop and remaining > 0 do
-            local dropAmount = math.min(15000, remaining)
-            ReplicatedStorage:WaitForChild("MainEvent"):FireServer("DropMoney", tostring(dropAmount))
-            remaining = remaining - dropAmount
+            local alts = {}
+            for _, userId in ipairs(getgenv().alts) do
+                local alt = Players:GetPlayerByUserId(userId)
+                if alt then table.insert(alts, alt) end
+            end
+            if #alts == 0 then break end
+
+            local chunk = math.min(15000 * #alts, remaining)
+            local perAlt = math.floor(chunk / #alts)
+            for _, alt in ipairs(alts) do
+                local dropAmount = math.min(15000, perAlt)
+                ReplicatedStorage:WaitForChild("MainEvent"):FireServer("DropMoney", tostring(dropAmount))
+                remaining = remaining - dropAmount
+            end
             task.wait(15)
         end
     end)
@@ -149,6 +160,7 @@ local function handleChat(plr, msg)
     if not ownerInstance then return end
     if plr.UserId ~= ownerInstance.UserId then return end
     msg = msg:lower()
+
     if msg:sub(1,7) == ".setup " then
         local setupName = msg:sub(8)
         local positions = setups[setupName]
@@ -177,6 +189,7 @@ local function handleChat(plr, msg)
             end
         end
         if targetPlayer then
+            local ownerInstance = Players:GetPlayerByUserId(getgenv().owner)
             for _, userId in ipairs(getgenv().alts) do
                 local alt = Players:GetPlayerByUserId(userId)
                 if alt then
