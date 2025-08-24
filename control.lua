@@ -96,11 +96,28 @@ local function teleportPlayer(player, position)
     end
 end
 
-local function startDropping(amount)
+local function parseAmount(str)
+    if not str then return 15000 end
+    str = str:lower():gsub(",","")
+    local num = tonumber(str:match("%d+%.?%d*"))
+    if not num then return 15000 end
+    if str:find("k") then
+        num = num * 1000
+    elseif str:find("m") then
+        num = num * 1000000
+    end
+    return math.floor(num)
+end
+
+local function startDropping(totalAmount)
+    totalAmount = parseAmount(totalAmount)
     dropLoop = true
     dropTask = spawn(function()
-        while dropLoop do
-            ReplicatedStorage:WaitForChild("MainEvent"):FireServer("DropMoney", tostring(amount))
+        local remaining = totalAmount
+        while dropLoop and remaining > 0 do
+            local dropAmount = math.min(15000, remaining)
+            ReplicatedStorage:WaitForChild("MainEvent"):FireServer("DropMoney", tostring(dropAmount))
+            remaining = remaining - dropAmount
             task.wait(15)
         end
     end)
@@ -141,23 +158,22 @@ local function handleChat(plr, msg)
                 local alt = Players:GetPlayerByUserId(userId)
                 if alt and positions[index] then
                     teleportPlayer(alt, positions[index])
-                    index += 1
+                    index = index + 1
                 end
             end
         end
     elseif msg:sub(1,5) == ".drop" then
-        startDropping(15000)
+        local amount = msg:match("%S+%s*(.+)")
+        startDropping(amount)
     elseif msg:sub(1,5) == ".stop" then
         stopDropping()
     elseif msg:sub(1,7) == ".bring " then
         local targetName = msg:sub(8)
-        local targetPlayer = Players:FindFirstChild(targetName)
-        if not targetPlayer then
-            for _, p in ipairs(Players:GetPlayers()) do
-                if p.Name:lower() == targetName then
-                    targetPlayer = p
-                    break
-                end
+        local targetPlayer
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Name:lower() == targetName then
+                targetPlayer = p
+                break
             end
         end
         if targetPlayer then
