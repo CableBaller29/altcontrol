@@ -2,7 +2,8 @@ local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer\
+local Camera = workspace.CurrentCamera
 local BOUNTY_REMOTE = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SetBounty")
 
 local totalSpent = 0
@@ -794,6 +795,26 @@ GoToB.Activated:Connect(function()
     end
 end)
 
+ViewB.Activated:Connect(function()
+    local targetName = PlayerNameThing.Text
+    if not targetName or targetName == "" then return end
+
+    if viewing then
+        viewing = false
+        Camera.CameraSubject = lastCameraSubject or LocalPlayer.Character:FindFirstChild("Humanoid")
+        ViewB.Text = "View"
+        return
+    end
+
+    targetPlayer = Players:FindFirstChild(targetName)
+    if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("Humanoid") then return end
+
+    viewing = true
+    lastCameraSubject = Camera.CameraSubject
+    Camera.CameraSubject = targetPlayer.Character.Humanoid
+    ViewB.Text = "Unview"
+end)
+
 local function parseBountyAmount(text)
     local lower = text:lower():gsub("%s", "") -- remove spaces and lowercase
     local multiplier = 1
@@ -1009,11 +1030,13 @@ end
 
 UpdateBuyerUI()
 
+local initialTarget = 0
 local lastCurrency = 0
 
 local function updateTargetValues()
     local text = GivingBox.Text
     local amountToGive = parseBountyAmount(text)
+    if amountToGive <= 0 then return end
 
     local buyerId = getgenv().Buyer
     if not buyerId then return end
@@ -1024,26 +1047,31 @@ local function updateTargetValues()
                             and buyer.DataFolder:FindFirstChild("Currency") 
                             and buyer.DataFolder.Currency.Value or 0
 
-    if lastCurrency == 0 then
+    if initialTarget == 0 then
+        initialTarget = currentCurrency + amountToGive
         lastCurrency = currentCurrency
     end
 
     local gained = math.max(0, currentCurrency - lastCurrency)
-    local remaining = math.max(0, amountToGive - gained)
-
-    TargetAmount.Text = formatNumberWithCommas(currentCurrency + remaining)
-    TargetRemaining.Text = formatNumberWithCommas(remaining)
-
     lastCurrency = currentCurrency
+
+    local remaining = math.max(0, initialTarget - currentCurrency)
+    
+    TargetAmount.Text = formatNumberWithCommas(initialTarget)
+    TargetRemaining.Text = formatNumberWithCommas(remaining)
 end
 
-GivingBox:GetPropertyChangedSignal("Text"):Connect(updateTargetValues)
+GivingBox:GetPropertyChangedSignal("Text"):Connect(function()
+    initialTarget = 0
+    updateTargetValues()
+end)
+
 GivingBox.FocusLost:Connect(function(enterPressed)
     if enterPressed then
+        initialTarget = 0
         updateTargetValues()
     end
 end)
-
 spawn(function()
     while true do
         wait(0.1)
