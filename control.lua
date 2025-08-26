@@ -996,6 +996,27 @@ UpdateBuyerUI()
 Players.PlayerAdded:Connect(UpdateBuyerUI)
 Players.PlayerRemoving:Connect(UpdateBuyerUI)
 
+local function updateTargetValues()
+    local text = GivingBox.Text
+    local amountToGive = parseBountyAmount(text)
+
+    local buyer = Players.LocalPlayer
+    local currentCurrency = buyer:FindFirstChild("DataFolder") and buyer.DataFolder:FindFirstChild("Currency") and buyer.DataFolder.Currency.Value or 0
+
+    local targetAmount = currentCurrency + amountToGive
+    local remaining = targetAmount - currentCurrency
+
+    TargetAmount.Text = tostring(targetAmount)
+    TargetRemaining.Text = tostring(remaining)
+end
+
+GivingBox:GetPropertyChangedSignal("Text"):Connect(updateTargetValues)
+GivingBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        updateTargetValues()
+    end
+end)
+
 for i, v in pairs(getconnections(LocalPlayer.Idled)) do
     v:Disable()
 end
