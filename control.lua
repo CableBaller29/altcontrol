@@ -1,6 +1,7 @@
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -822,6 +823,49 @@ ViewB.Activated:Connect(function()
     lastCameraSubject = Camera.CameraSubject
     Camera.CameraSubject = targetPlayer.Character.Humanoid
     ViewB.Text = "Unview"
+end)
+
+BringB.Activated:Connect(function()
+    local targetName = PlayerNameThing.Text
+    if not targetName or targetName == "" then return end
+
+    local targetPlayer = Players:FindFirstChild(targetName)
+    if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+    local tool = LocalPlayer.Backpack:WaitForChild("Combat")
+    LocalPlayer.Character.Humanoid:EquipTool(tool)
+
+    local originalCFrame = char.HumanoidRootPart.CFrame
+
+    local targetHRP = targetPlayer.Character.HumanoidRootPart
+    char.HumanoidRootPart.CFrame = targetHRP.CFrame * CFrame.new(0, -3, 0)
+
+    local teleporting = true
+    spawn(function()
+        while teleporting do
+            char.HumanoidRootPart.CFrame = targetHRP.CFrame * CFrame.new(0, -3, 0)
+            wait(0.05)
+        end
+    end)
+
+    wait(0.2)
+    tool:Activate()
+    wait(0.1)
+
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.G, false, game)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.G, false, game)
+
+    wait(0.2)
+    teleporting = false
+
+    char.HumanoidRootPart.CFrame = originalCFrame
+    wait(0.1)
+
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.G, false, game)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.G, false, game)
 end)
 
 KnockB.Activated:Connect(function()
