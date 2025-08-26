@@ -853,7 +853,7 @@ BringB.Activated:Connect(function()
 
     wait(0.2)
     tool:Activate()
-    wait(1)
+    wait(4)
 
     VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.G, false, game)
     VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.G, false, game)
