@@ -2,7 +2,7 @@ local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer\
+local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local BOUNTY_REMOTE = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("SetBounty")
 
