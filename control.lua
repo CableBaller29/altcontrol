@@ -824,6 +824,30 @@ ViewB.Activated:Connect(function()
     ViewB.Text = "Unview"
 end)
 
+
+KnockB.Activated:Connect(function()
+    if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
+    local character = targetPlayer.Character
+    local hrp = character.HumanoidRootPart
+    local targetPosition = hrp.Position - Vector3.new(0, 3, 0)
+
+    while hrp.Position.Y < targetPosition.Y - 1 do
+        hrp.CFrame = CFrame.new(targetPosition + Vector3.new(0, 5, 0))
+        wait(0.05)
+    end
+    hrp.CFrame = CFrame.new(targetPosition)
+
+    local tool = character:FindFirstChild("Backpack") and character.Backpack:FindFirstChild("Combat")
+    if not tool then
+        tool = character:FindFirstChild("Combat")
+    end
+    if tool then
+        character.Humanoid:EquipTool(tool)
+        wait(0.1)
+        tool:Activate()
+    end
+end)
+
 local function parseBountyAmount(text)
     local lower = text:lower():gsub("%s", "") -- remove spaces and lowercase
     local multiplier = 1
