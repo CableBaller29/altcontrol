@@ -783,7 +783,13 @@ GoToB.Activated:Connect(function()
     local targetName = PlayerNameThing.Text
     if not targetName or targetName == "" then return end
 
-    local targetPlayer = Players:FindFirstChild(targetName)
+    local targetPlayer
+for _, p in ipairs(Players:GetPlayers()) do
+    if p.Name:lower():find(targetName:lower()) then
+        targetPlayer = p
+        break
+    end
+end
     if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then 
         return 
     end
