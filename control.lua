@@ -982,10 +982,12 @@ local function UpdateBuyerUI()
         TargetUserImage.Image = thumbnail
         TargetUsername.Text = username
         TargetUserID.Text = tostring(userId)
+        Amount.Text = buyer.DataFolder.Currency.Value
     else
         TargetUserImage.Image = ""
         TargetUsername.Text = "Not in-game"
         TargetUserID.Text = tostring(getgenv().Buyer)
+        Amount.Text = ""
     end
 end
 
