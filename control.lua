@@ -1006,8 +1006,8 @@ local function updateTargetValues()
     local targetAmount = currentCurrency + amountToGive
     local remaining = targetAmount - currentCurrency
 
-    TargetAmount.Text = tostring(targetAmount)
-    TargetRemaining.Text = tostring(remaining)
+    TargetAmount.Text = formatNumberWithCommas(targetAmount)
+    TargetRemaining.Text = formatNumberWithCommas(remaining)
 end
 
 GivingBox:GetPropertyChangedSignal("Text"):Connect(updateTargetValues)
