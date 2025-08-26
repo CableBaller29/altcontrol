@@ -825,6 +825,9 @@ ViewB.Activated:Connect(function()
 end)
 
 KnockB.Activated:Connect(function()
+    local targetName = PlayerNameThing.Text
+    if not targetName or targetName == "" then return end
+    targetPlayer = Players:FindFirstChild(targetName)
     if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
     local character = targetPlayer.Character
     local hrp = character.HumanoidRootPart
