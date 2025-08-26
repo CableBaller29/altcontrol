@@ -1000,7 +1000,9 @@ local function updateTargetValues()
     local text = GivingBox.Text
     local amountToGive = parseBountyAmount(text)
 
-    local buyer = Players.LocalPlayer
+    local buyerId = getgenv().Buyer
+    if not buyerId then return end
+    local buyer = Players:GetPlayerByUserId(buyerId)
     local currentCurrency = buyer:FindFirstChild("DataFolder") and buyer.DataFolder:FindFirstChild("Currency") and buyer.DataFolder.Currency.Value or 0
 
     local targetAmount = currentCurrency + amountToGive
