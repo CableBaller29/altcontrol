@@ -826,6 +826,10 @@ ViewB.Activated:Connect(function()
 end)
 
 BringB.Activated:Connect(function()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local VirtualInputManager = game:GetService("VirtualInputManager")
+
     local targetName = PlayerNameThing.Text
     if not targetName or targetName == "" then return end
 
@@ -836,24 +840,22 @@ BringB.Activated:Connect(function()
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
 
     local tool = LocalPlayer.Backpack:WaitForChild("Combat")
-    LocalPlayer.Character.Humanoid:EquipTool(tool)
+    char.Humanoid:EquipTool(tool)
 
     local originalCFrame = char.HumanoidRootPart.CFrame
-
     local targetHRP = targetPlayer.Character.HumanoidRootPart
-    char.HumanoidRootPart.CFrame = targetHRP.CFrame * CFrame.new(0, -3, 0)
 
     local teleporting = true
     spawn(function()
         while teleporting do
-            char.HumanoidRootPart.CFrame = targetHRP.CFrame * CFrame.new(0, -3, 0)
+            char.HumanoidRootPart.CFrame = targetHRP.CFrame * CFrame.new(0, 3, 0)
             wait(0.05)
         end
     end)
 
     wait(0.2)
     tool:Activate()
-    wait(4)
+    wait(0.5)
 
     VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.G, false, game)
     VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.G, false, game)
@@ -864,6 +866,7 @@ BringB.Activated:Connect(function()
     char.HumanoidRootPart.CFrame = originalCFrame
     wait(0.1)
 
+    -- Drop target
     VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.G, false, game)
     VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.G, false, game)
 end)
