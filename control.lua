@@ -860,7 +860,7 @@ BringB.Activated:Connect(function()
     VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.G, false, game)
     VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.G, false, game)
 
-    wait(0.2)
+    wait(4)
     teleporting = false
 
     char.HumanoidRootPart.CFrame = originalCFrame
