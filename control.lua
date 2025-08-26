@@ -9,6 +9,9 @@ local BOUNTY_REMOTE = game:GetService("ReplicatedStorage"):WaitForChild("Remotes
 local totalSpent = 0
 local lastValue = 0
 
+local viewing = false
+local lastCameraSubject = nil
+
 local dragging
 local dragInput
 local dragStart
