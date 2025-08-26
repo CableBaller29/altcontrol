@@ -778,6 +778,22 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 
+GoToB.Activated:Connect(function()
+    local targetName = PlayerNameThing.Text
+    if not targetName or targetName == "" then return end
+
+    local targetPlayer = Players:FindFirstChild(targetName)
+    if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then 
+        return 
+    end
+
+    local targetHRP = targetPlayer.Character.HumanoidRootPart
+    local localHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if localHRP then
+        localHRP.CFrame = targetHRP.CFrame + Vector3.new(0, 3, 0)
+    end
+end)
+
 local function parseBountyAmount(text)
     local lower = text:lower():gsub("%s", "") -- remove spaces and lowercase
     local multiplier = 1
