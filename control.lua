@@ -824,7 +824,6 @@ ViewB.Activated:Connect(function()
     ViewB.Text = "Unview"
 end)
 
-
 KnockB.Activated:Connect(function()
     if not targetPlayer or not targetPlayer.Character or not targetPlayer.Character:FindFirstChild("HumanoidRootPart") then return end
     local character = targetPlayer.Character
