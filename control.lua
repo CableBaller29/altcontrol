@@ -993,8 +993,7 @@ end
 
 UpdateBuyerUI()
 
-Players.PlayerAdded:Connect(UpdateBuyerUI)
-Players.PlayerRemoving:Connect(UpdateBuyerUI)
+local lastCurrency = 0
 
 local function updateTargetValues()
     local text = GivingBox.Text
@@ -1003,18 +1002,35 @@ local function updateTargetValues()
     local buyerId = getgenv().Buyer
     if not buyerId then return end
     local buyer = Players:GetPlayerByUserId(buyerId)
-    local currentCurrency = buyer:FindFirstChild("DataFolder") and buyer.DataFolder:FindFirstChild("Currency") and buyer.DataFolder.Currency.Value or 0
+    if not buyer then return end
 
-    local targetAmount = currentCurrency + amountToGive
-    local remaining = targetAmount - currentCurrency
+    local currentCurrency = buyer:FindFirstChild("DataFolder") 
+                            and buyer.DataFolder:FindFirstChild("Currency") 
+                            and buyer.DataFolder.Currency.Value or 0
 
-    TargetAmount.Text = formatNumberWithCommas(targetAmount)
+    if lastCurrency == 0 then
+        lastCurrency = currentCurrency
+    end
+
+    local gained = math.max(0, currentCurrency - lastCurrency)
+    local remaining = math.max(0, amountToGive - gained)
+
+    TargetAmount.Text = formatNumberWithCommas(currentCurrency + remaining)
     TargetRemaining.Text = formatNumberWithCommas(remaining)
+
+    lastCurrency = currentCurrency
 end
 
 GivingBox:GetPropertyChangedSignal("Text"):Connect(updateTargetValues)
 GivingBox.FocusLost:Connect(function(enterPressed)
     if enterPressed then
+        updateTargetValues()
+    end
+end)
+
+spawn(function()
+    while true do
+        wait(0.1)
         updateTargetValues()
     end
 end)
