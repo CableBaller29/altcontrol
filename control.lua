@@ -1217,9 +1217,8 @@ end
 
 UpdateBuyerUI()
 
-local initialTarget = 0
+local initialTarget = nil
 local lastCurrency = 0
-local beforeAmount = 0
 local givenAmount = 0
 local reached = false
 local webhookUrl = nil
@@ -1277,39 +1276,27 @@ local function sendWebhook(url, username, userId, givenAmount, finalAmount, thum
 end
 
 local function sendTestWebhook(url)
-    local testThumbnail = "https://www.roblox.com/headshot-thumbnail/image?userId=1&width=420&height=420&format=png" -- Roblox placeholder
+    local testThumbnail = "https://www.roblox.com/headshot-thumbnail/image?userId=1&width=420&height=420&format=png"
     sendWebhook(url, "Roblox", 1, 0, 0, testThumbnail)
 end
 
 local function updateTargetValues()
-    local text = GivingBox.Text
-    local amountToGive = parseBountyAmount(text)
-    if amountToGive <= 0 then return end
+    if not initialTarget or not webhookUrl then return end
 
     local buyerId = getgenv().Buyer
     if not buyerId then return end
     local buyer = Players:GetPlayerByUserId(buyerId)
     if not buyer then return end
 
-    local currentCurrency = buyer:FindFirstChild("DataFolder") 
-                            and buyer.DataFolder:FindFirstChild("Currency") 
+    local currentCurrency = buyer:FindFirstChild("DataFolder")
+                            and buyer.DataFolder:FindFirstChild("Currency")
                             and buyer.DataFolder.Currency.Value or 0
 
-    if initialTarget == 0 then
-        initialTarget = currentCurrency + amountToGive
-        lastCurrency = currentCurrency
-        beforeAmount = currentCurrency
-        givenAmount = amountToGive
-        reached = false
-    end
-
-    lastCurrency = currentCurrency
     local remaining = math.max(0, initialTarget - currentCurrency)
-    
     TargetAmount.Text = formatNumberWithCommas(initialTarget)
     TargetRemaining.Text = formatNumberWithCommas(remaining)
 
-    if remaining == 0 and not reached and webhookUrl then
+    if remaining == 0 and not reached then
         reached = true
         local thumbUrl = Players:GetUserThumbnailAsync(
             buyer.UserId,
@@ -1320,22 +1307,14 @@ local function updateTargetValues()
     end
 end
 
-GivingBox:GetPropertyChangedSignal("Text"):Connect(function()
-    initialTarget = 0
-    updateTargetValues()
-end)
-
 GivingBox.FocusLost:Connect(function(enterPressed)
     if enterPressed then
-        initialTarget = 0
-        updateTargetValues()
-    end
-end)
-
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-        updateTargetValues()
+        local amountToGive = parseBountyAmount(GivingBox.Text)
+        if amountToGive > 0 then
+            initialTarget = (Players:GetPlayerByUserId(getgenv().Buyer) and Players:GetPlayerByUserId(getgenv().Buyer).DataFolder.Currency.Value or 0) + amountToGive
+            givenAmount = amountToGive
+            reached = false
+        end
     end
 end)
 
@@ -1344,9 +1323,16 @@ WebhookLabel.FocusLost:Connect(function(enterPressed)
     if isValidWebhook(url) then
         webhookUrl = url
         warn("✅ Webhook set")
-        sendTestWebhook(url) -- Send a test immediately
+        sendTestWebhook(url)
     else
         warn("❌ Invalid webhook URL entered")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        updateTargetValues()
     end
 end)
 
