@@ -1219,6 +1219,7 @@ UpdateBuyerUI()
 
 local initialTarget
 local lastCurrency = 0
+local beforeAmount = 0
 local givenAmount = 0
 local reached = false
 local webhookUrl
@@ -1232,11 +1233,10 @@ local function isValidWebhook(url)
     return string.match(url, "^https://discord.com/api/webhooks/%d+/%S+$") ~= nil
 end
 
-local function sendWebhook(url, username, userId, givenAmount, finalAmount, thumbnail)
+local function sendWebhook(url, username, userId, givenAmount, finalAmount)
     username = username or "Unknown"
     givenAmount = givenAmount or 0
     finalAmount = finalAmount or 0
-    thumbnail = thumbnail or "https://www.roblox.com/headshot-thumbnail/image?userId=1&width=420&height=420&format=png"
 
     local data = {
         embeds = {{
@@ -1246,8 +1246,7 @@ local function sendWebhook(url, username, userId, givenAmount, finalAmount, thum
             fields = {
                 { name = "Total DHC", value = tostring(givenAmount), inline = false },
                 { name = "Final DHC", value = tostring(finalAmount), inline = false }
-            },
-            thumbnail = { url = thumbnail }
+            }
         }}
     }
 
@@ -1281,7 +1280,7 @@ local function sendWebhook(url, username, userId, givenAmount, finalAmount, thum
 end
 
 local function sendTestWebhook(url)
-    sendWebhook(url, "Roblox", 1, 0, 0) -- always safe embed
+    sendWebhook(url, "Roblox", 1, 0, 0)
 end
 
 local function updateTargetValues()
@@ -1296,18 +1295,16 @@ local function updateTargetValues()
                             and buyer.DataFolder:FindFirstChild("Currency")
                             and buyer.DataFolder.Currency.Value or 0
 
+    local gained = math.max(0, currentCurrency - lastCurrency)
+    lastCurrency = currentCurrency
+
     local remaining = math.max(0, initialTarget - currentCurrency)
     TargetAmount.Text = formatNumberWithCommas(initialTarget)
     TargetRemaining.Text = formatNumberWithCommas(remaining)
 
     if remaining == 0 and not reached then
         reached = true
-        local thumbUrl = Players:GetUserThumbnailAsync(
-            buyer.UserId,
-            Enum.ThumbnailType.HeadShot,
-            Enum.ThumbnailSize.Size420x420
-        )
-        sendWebhook(webhookUrl, buyer.Name, buyer.UserId, givenAmount, currentCurrency, thumbUrl)
+        sendWebhook(webhookUrl, buyer.Name, buyer.UserId, givenAmount, currentCurrency)
     end
 end
 
@@ -1318,6 +1315,7 @@ GivingBox.FocusLost:Connect(function(enterPressed)
             local buyer = Players:GetPlayerByUserId(getgenv().Buyer)
             initialTarget = (buyer and buyer.DataFolder:FindFirstChild("Currency") and buyer.DataFolder.Currency.Value or 0) + amountToGive
             givenAmount = amountToGive
+            lastCurrency = buyer and buyer.DataFolder:FindFirstChild("Currency") and buyer.DataFolder.Currency.Value or 0
             reached = false
         end
     end
