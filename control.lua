@@ -1219,7 +1219,6 @@ UpdateBuyerUI()
 
 local initialTarget
 local lastCurrency = 0
-local beforeAmount = 0
 local givenAmount = 0
 local reached = false
 local webhookUrl
@@ -1295,9 +1294,6 @@ local function updateTargetValues()
                             and buyer.DataFolder:FindFirstChild("Currency")
                             and buyer.DataFolder.Currency.Value or 0
 
-    local gained = math.max(0, currentCurrency - lastCurrency)
-    lastCurrency = currentCurrency
-
     local remaining = math.max(0, initialTarget - currentCurrency)
     TargetAmount.Text = formatNumberWithCommas(initialTarget)
     TargetRemaining.Text = formatNumberWithCommas(remaining)
@@ -1308,16 +1304,15 @@ local function updateTargetValues()
     end
 end
 
-GivingBox.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        local amountToGive = parseBountyAmount(GivingBox.Text)
-        if amountToGive > 0 then
-            local buyer = Players:GetPlayerByUserId(getgenv().Buyer)
-            initialTarget = (buyer and buyer.DataFolder:FindFirstChild("Currency") and buyer.DataFolder.Currency.Value or 0) + amountToGive
-            givenAmount = amountToGive
-            lastCurrency = buyer and buyer.DataFolder:FindFirstChild("Currency") and buyer.DataFolder.Currency.Value or 0
-            reached = false
-        end
+GivingBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local amountToGive = parseBountyAmount(GivingBox.Text)
+    if amountToGive > 0 then
+        local buyer = Players:GetPlayerByUserId(getgenv().Buyer)
+        initialTarget = (buyer and buyer.DataFolder:FindFirstChild("Currency") and buyer.DataFolder.Currency.Value or 0) + amountToGive
+        givenAmount = amountToGive
+        lastCurrency = buyer and buyer.DataFolder:FindFirstChild("Currency") and buyer.DataFolder.Currency.Value or 0
+        reached = false
+        updateTargetValues()
     end
 end)
 
