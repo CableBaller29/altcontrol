@@ -1224,6 +1224,11 @@ local givenAmount = 0
 local reached = false
 local webhookUrl = nil
 
+local function formatNumberWithCommas(n)
+    local str = tostring(n)
+    return str:reverse():gsub("(%d%d%d)","%1,"):reverse():gsub("^,", "")
+end
+
 local function isValidWebhook(url)
     return string.match(url, "^https://discord.com/api/webhooks/%d+/%S+$") ~= nil
 end
@@ -1235,40 +1240,45 @@ local function sendWebhook(url, username, userId, givenAmount, finalAmount, thum
             description = string.format("**%s** has reached their goal!", username),
             color = 3066993,
             fields = {
-                {
-                    name = "Total DHC",
-                    value = tostring(formatNumberWithCommas(givenAmount)),
-                    inline = false
-                },
-                {
-                    name = "Final DHC",
-                    value = tostring(formatNumberWithCommas(finalAmount)),
-                    inline = false
-                }
+                { name = "Total DHC", value = tostring(givenAmount or 0), inline = false },
+                { name = "Final DHC", value = tostring(finalAmount or 0), inline = false }
             },
-            thumbnail = { url = thumbnail }
+            thumbnail = { url = thumbnail or "" }
         }}
     }
 
-    local jsonData = game:GetService("HttpService"):JSONEncode(data)
-    local request = (http_request or syn and syn.request or http and http.request)
+    local jsonData = HttpService:JSONEncode(data)
+    local requestFunc = syn and syn.request or http_request or (http and http.request)
 
-    if request then
-        local res = request({
+    if not requestFunc then
+        warn("❌ Your executor does not support HTTP requests")
+        return
+    end
+
+    local success, res = pcall(function()
+        return requestFunc({
             Url = url,
             Method = "POST",
             Headers = { ["Content-Type"] = "application/json" },
             Body = jsonData
         })
+    end)
 
-        if res.Success or res.StatusCode == 204 then
+    if success and res then
+        local status = res.StatusCode or res.status or 0
+        if status >= 200 and status < 300 then
             warn("✅ Webhook sent successfully!")
         else
-            warn("❌ Failed to send webhook:", res.StatusCode, res.Body)
+            warn("❌ Failed to send webhook:", status, res.Body or res.body or "No body")
         end
     else
-        warn("Your executor does not support HTTP requests")
+        warn("❌ Failed to send webhook: HTTP request error")
     end
+end
+
+local function sendTestWebhook(url)
+    local testThumbnail = "https://www.roblox.com/headshot-thumbnail/image?userId=1&width=420&height=420&format=png" -- Roblox placeholder
+    sendWebhook(url, "Roblox", 1, 0, 0, testThumbnail)
 end
 
 local function updateTargetValues()
@@ -1293,9 +1303,7 @@ local function updateTargetValues()
         reached = false
     end
 
-    local gained = math.max(0, currentCurrency - lastCurrency)
     lastCurrency = currentCurrency
-
     local remaining = math.max(0, initialTarget - currentCurrency)
     
     TargetAmount.Text = formatNumberWithCommas(initialTarget)
@@ -1336,6 +1344,7 @@ WebhookLabel.FocusLost:Connect(function(enterPressed)
     if isValidWebhook(url) then
         webhookUrl = url
         warn("✅ Webhook set")
+        sendTestWebhook(url) -- Send a test immediately
     else
         warn("❌ Invalid webhook URL entered")
     end
