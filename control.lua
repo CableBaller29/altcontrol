@@ -1304,14 +1304,14 @@ local function updateTargetValues()
     end
 end
 
+GivingBox:GetPropertyChangedSignal("Text"):Connect(function()
+    initialTarget = 0
+    updateTargetValues()
+end)
+
 GivingBox.FocusLost:Connect(function(enterPressed)
-    if not enterPressed then return end
-    local amountToGive = parseBountyAmount(GivingBox.Text)
-    if amountToGive > 0 then
-        local buyer = Players:GetPlayerByUserId(getgenv().Buyer)
-        initialTarget = (buyer and buyer.DataFolder:FindFirstChild("Currency") and buyer.DataFolder.Currency.Value or 0) + amountToGive
-        givenAmount = amountToGive
-        reached = false
+    if enterPressed then
+        initialTarget = 0
         updateTargetValues()
     end
 end)
