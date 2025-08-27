@@ -1217,14 +1217,14 @@ end
 
 UpdateBuyerUI()
 
-local initialTarget = nil
+local initialTarget
 local lastCurrency = 0
 local givenAmount = 0
 local reached = false
-local webhookUrl = nil
+local webhookUrl
 
 local function formatNumberWithCommas(n)
-    local str = tostring(n)
+    local str = tostring(n or 0)
     return str:reverse():gsub("(%d%d%d)","%1,"):reverse():gsub("^,", "")
 end
 
@@ -1233,16 +1233,21 @@ local function isValidWebhook(url)
 end
 
 local function sendWebhook(url, username, userId, givenAmount, finalAmount, thumbnail)
+    username = username or "Unknown"
+    givenAmount = givenAmount or 0
+    finalAmount = finalAmount or 0
+    thumbnail = thumbnail or "https://www.roblox.com/headshot-thumbnail/image?userId=1&width=420&height=420&format=png"
+
     local data = {
         embeds = {{
             title = "✅ Order Completed",
-            description = string.format("**%s** has reached their goal!", username),
+            description = "**"..username.."** has reached their goal!",
             color = 3066993,
             fields = {
-                { name = "Total DHC", value = tostring(givenAmount or 0), inline = false },
-                { name = "Final DHC", value = tostring(finalAmount or 0), inline = false }
+                { name = "Total DHC", value = tostring(givenAmount), inline = false },
+                { name = "Final DHC", value = tostring(finalAmount), inline = false }
             },
-            thumbnail = { url = thumbnail or "" }
+            thumbnail = { url = thumbnail }
         }}
     }
 
@@ -1276,8 +1281,7 @@ local function sendWebhook(url, username, userId, givenAmount, finalAmount, thum
 end
 
 local function sendTestWebhook(url)
-    local testThumbnail = "https://www.roblox.com/headshot-thumbnail/image?userId=1&width=420&height=420&format=png"
-    sendWebhook(url, "Roblox", 1, 0, 0, testThumbnail)
+    sendWebhook(url, "Roblox", 1, 0, 0) -- always safe embed
 end
 
 local function updateTargetValues()
@@ -1311,7 +1315,8 @@ GivingBox.FocusLost:Connect(function(enterPressed)
     if enterPressed then
         local amountToGive = parseBountyAmount(GivingBox.Text)
         if amountToGive > 0 then
-            initialTarget = (Players:GetPlayerByUserId(getgenv().Buyer) and Players:GetPlayerByUserId(getgenv().Buyer).DataFolder.Currency.Value or 0) + amountToGive
+            local buyer = Players:GetPlayerByUserId(getgenv().Buyer)
+            initialTarget = (buyer and buyer.DataFolder:FindFirstChild("Currency") and buyer.DataFolder.Currency.Value or 0) + amountToGive
             givenAmount = amountToGive
             reached = false
         end
